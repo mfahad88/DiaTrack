@@ -92,8 +92,11 @@ interface TrackerDao {
     @Query("SELECT * FROM reminders ORDER BY timeHour ASC, timeMinute ASC")
     fun getAllReminders(): Flow<List<Reminder>>
 
+    @Query("SELECT * FROM reminders")
+    suspend fun getAllRemindersSync(): List<Reminder>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertReminder(reminder: Reminder)
+    suspend fun insertReminder(reminder: Reminder): Long
 
     @Update
     suspend fun updateReminder(reminder: Reminder)

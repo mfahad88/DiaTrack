@@ -84,8 +84,8 @@ class TrackerRepository(private val trackerDao: TrackerDao) {
     // --- Reminders ---
     val allReminders: Flow<List<Reminder>> = trackerDao.getAllReminders()
 
-    suspend fun insertReminder(reminder: Reminder) {
-        trackerDao.insertReminder(reminder)
+    suspend fun insertReminder(reminder: Reminder): Long {
+        return trackerDao.insertReminder(reminder)
     }
 
     suspend fun updateReminder(reminder: Reminder) {

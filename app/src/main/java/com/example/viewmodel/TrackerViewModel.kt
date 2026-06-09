@@ -9,6 +9,7 @@ import com.example.api.GeminiPredictionService
 import com.example.api.TrendPredictionResult
 import com.example.data.*
 import com.example.repository.TrackerRepository
+import com.example.ui.components.LocalNotificationManager
 import com.example.ui.components.PdfExportHelper
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -98,11 +99,23 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         // Seed some sample reminders if they don't exist yet
         repository.allReminders.first().let { list ->
             if (list.isEmpty()) {
-                repository.insertReminder(Reminder(title = "Morning Fasting Glucose Check", timeHour = 8, timeMinute = 0, type = "Blood Sugar"))
-                repository.insertReminder(Reminder(title = "Breakfast Meal Logging", timeHour = 8, timeMinute = 30, type = "Meal"))
-                repository.insertReminder(Reminder(title = "Afternoon Glucose Routine check", timeHour = 14, timeMinute = 0, type = "Blood Sugar"))
-                repository.insertReminder(Reminder(title = "Evening Insulin Dosage logs", timeHour = 20, timeMinute = 0, type = "Insulin"))
-                repository.insertReminder(Reminder(title = "Bedtime Blood Sugar Check", timeHour = 22, timeMinute = 30, type = "Blood Sugar"))
+                val r1 = Reminder(title = "Morning Fasting Glucose Check", timeHour = 8, timeMinute = 0, type = "Blood Sugar")
+                val r2 = Reminder(title = "Breakfast Meal Logging", timeHour = 8, timeMinute = 30, type = "Meal")
+                val r3 = Reminder(title = "Afternoon Glucose Routine check", timeHour = 14, timeMinute = 0, type = "Blood Sugar")
+                val r4 = Reminder(title = "Evening Insulin Dosage logs", timeHour = 20, timeMinute = 0, type = "Insulin")
+                val r5 = Reminder(title = "Bedtime Blood Sugar Check", timeHour = 22, timeMinute = 30, type = "Blood Sugar")
+
+                val id1 = repository.insertReminder(r1)
+                val id2 = repository.insertReminder(r2)
+                val id3 = repository.insertReminder(r3)
+                val id4 = repository.insertReminder(r4)
+                val id5 = repository.insertReminder(r5)
+
+                LocalNotificationManager.scheduleReminder(getApplication(), r1.copy(id = id1.toInt()))
+                LocalNotificationManager.scheduleReminder(getApplication(), r2.copy(id = id2.toInt()))
+                LocalNotificationManager.scheduleReminder(getApplication(), r3.copy(id = id3.toInt()))
+                LocalNotificationManager.scheduleReminder(getApplication(), r4.copy(id = id4.toInt()))
+                LocalNotificationManager.scheduleReminder(getApplication(), r5.copy(id = id5.toInt()))
             }
         }
     }
@@ -360,7 +373,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     // --- Reminders CRUD ---
     fun addReminder(title: String, hour: Int, minute: Int, type: String) {
         viewModelScope.launch {
-            repository.insertReminder(
+            val id = repository.insertReminder(
                 Reminder(
                     title = title,
                     timeHour = hour,
@@ -369,6 +382,15 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     isEnabled = true
                 )
             )
+            val insertedReminder = Reminder(
+                id = id.toInt(),
+                title = title,
+                timeHour = hour,
+                timeMinute = minute,
+                type = type,
+                isEnabled = true
+            )
+            LocalNotificationManager.scheduleReminder(getApplication(), insertedReminder)
         }
     }
 
@@ -376,12 +398,18 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val updated = reminder.copy(isEnabled = !reminder.isEnabled)
             repository.updateReminder(updated)
+            if (updated.isEnabled) {
+                LocalNotificationManager.scheduleReminder(getApplication(), updated)
+            } else {
+                LocalNotificationManager.cancelReminder(getApplication(), updated)
+            }
         }
     }
 
     fun deleteReminder(reminder: Reminder) {
         viewModelScope.launch {
             repository.deleteReminder(reminder)
+            LocalNotificationManager.cancelReminder(getApplication(), reminder)
         }
     }
 
