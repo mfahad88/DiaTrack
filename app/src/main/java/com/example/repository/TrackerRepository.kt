@@ -153,6 +153,36 @@ class TrackerRepository(private val trackerDao: TrackerDao) {
         trackerDao.deleteBloodPressure(bp)
     }
 
+    // --- Expanded Health Trackers ---
+    val allSleepLogs: Flow<List<SleepLog>> = trackerDao.getAllSleepLogs()
+    val allStressMoodLogs: Flow<List<StressMoodLog>> = trackerDao.getAllStressMoodLogs()
+    val allWeightLogs: Flow<List<WeightLog>> = trackerDao.getAllWeightLogs()
+    val allLabResults: Flow<List<LabResult>> = trackerDao.getAllLabResults()
+    val allSickDayLogs: Flow<List<SickDayLog>> = trackerDao.getAllSickDayLogs()
+    val allFoodPhotoEstimates: Flow<List<FoodPhotoEstimate>> = trackerDao.getAllFoodPhotoEstimates()
+    val allWearableSnapshots: Flow<List<WearableSnapshot>> = trackerDao.getAllWearableSnapshots()
+
+    suspend fun insertSleepLog(log: SleepLog) = trackerDao.insertSleepLog(log)
+    suspend fun deleteSleepLog(log: SleepLog) = trackerDao.deleteSleepLog(log)
+
+    suspend fun insertStressMoodLog(log: StressMoodLog) = trackerDao.insertStressMoodLog(log)
+    suspend fun deleteStressMoodLog(log: StressMoodLog) = trackerDao.deleteStressMoodLog(log)
+
+    suspend fun insertWeightLog(log: WeightLog) = trackerDao.insertWeightLog(log)
+    suspend fun deleteWeightLog(log: WeightLog) = trackerDao.deleteWeightLog(log)
+
+    suspend fun insertLabResult(result: LabResult) = trackerDao.insertLabResult(result)
+    suspend fun deleteLabResult(result: LabResult) = trackerDao.deleteLabResult(result)
+
+    suspend fun insertSickDayLog(log: SickDayLog) = trackerDao.insertSickDayLog(log)
+    suspend fun deleteSickDayLog(log: SickDayLog) = trackerDao.deleteSickDayLog(log)
+
+    suspend fun insertFoodPhotoEstimate(estimate: FoodPhotoEstimate) = trackerDao.insertFoodPhotoEstimate(estimate)
+    suspend fun deleteFoodPhotoEstimate(estimate: FoodPhotoEstimate) = trackerDao.deleteFoodPhotoEstimate(estimate)
+
+    suspend fun insertWearableSnapshot(snapshot: WearableSnapshot) = trackerDao.insertWearableSnapshot(snapshot)
+    suspend fun deleteWearableSnapshot(snapshot: WearableSnapshot) = trackerDao.deleteWearableSnapshot(snapshot)
+
     suspend fun clearAllLogs() {
         trackerDao.deleteAllGlucoseReadings()
         trackerDao.deleteAllMealLogs()
@@ -162,5 +192,19 @@ class TrackerRepository(private val trackerDao: TrackerDao) {
         trackerDao.deleteAllWaterIntakes()
         trackerDao.deleteAllExercises()
         trackerDao.deleteAllBloodPressures()
+        trackerDao.deleteAllSleepLogs()
+        trackerDao.deleteAllStressMoodLogs()
+        trackerDao.deleteAllWeightLogs()
+        trackerDao.deleteAllLabResults()
+        trackerDao.deleteAllSickDayLogs()
+        trackerDao.deleteAllFoodPhotoEstimates()
+        trackerDao.deleteAllWearableSnapshots()
+    }
+
+    suspend fun clearAllUserData() {
+        clearAllLogs()
+        trackerDao.deleteAllReminders()
+        trackerDao.setAlertThreshold(AlertThreshold())
+        trackerDao.setUserProfile(UserProfile())
     }
 }

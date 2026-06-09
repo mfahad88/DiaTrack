@@ -115,3 +115,86 @@ data class BloodPressure(
     val symptoms: String = "",
     val notes: String = ""
 )
+
+@Entity(tableName = "sleep_logs")
+data class SleepLog(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val timestamp: Long = System.currentTimeMillis(),
+    val durationHours: Double,
+    val quality: String,
+    val wakeGlucose: Double = 0.0,
+    val notes: String = ""
+)
+
+@Entity(tableName = "stress_mood_logs")
+data class StressMoodLog(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val timestamp: Long = System.currentTimeMillis(),
+    val stressLevel: Int,
+    val mood: String,
+    val symptoms: String = "",
+    val notes: String = ""
+)
+
+@Entity(tableName = "weight_logs")
+data class WeightLog(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val timestamp: Long = System.currentTimeMillis(),
+    val weightKg: Double,
+    val waistCm: Double = 0.0,
+    val bmi: Double = 0.0,
+    val notes: String = ""
+)
+
+@Entity(tableName = "lab_results")
+data class LabResult(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val timestamp: Long = System.currentTimeMillis(),
+    val hba1c: Double = 0.0,
+    val ldl: Double = 0.0,
+    val hdl: Double = 0.0,
+    val triglycerides: Double = 0.0,
+    val creatinine: Double = 0.0,
+    val egfr: Double = 0.0,
+    val urineAlbumin: Double = 0.0,
+    val ketones: String = "",
+    val notes: String = ""
+)
+
+@Entity(tableName = "sick_day_logs")
+data class SickDayLog(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val timestamp: Long = System.currentTimeMillis(),
+    val temperatureC: Double = 0.0,
+    val ketones: String = "",
+    val appetite: String = "",
+    val vomiting: Boolean = false,
+    val hydrationConcern: Boolean = false,
+    val notes: String = ""
+)
+
+@Entity(tableName = "food_photo_estimates")
+data class FoodPhotoEstimate(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val timestamp: Long = System.currentTimeMillis(),
+    val description: String,
+    val estimatedCarbsGrams: Double,
+    val estimatedCalories: Double,
+    val estimatedProteinGrams: Double = 0.0,
+    val estimatedFatGrams: Double = 0.0,
+    val confidence: String = "Medium",
+    val photoUri: String = "",
+    val notes: String = ""
+)
+
+@Entity(tableName = "wearable_snapshots")
+data class WearableSnapshot(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val timestamp: Long = System.currentTimeMillis(),
+    val source: String = "Manual",
+    val steps: Int = 0,
+    val heartRate: Int = 0,
+    val sleepHours: Double = 0.0,
+    val activeCalories: Double = 0.0,
+    val notes: String = ""
+)

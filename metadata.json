@@ -2,5 +2,5 @@
   "name": "DiaTrack",
   "description": "Professional metabolic tracker for glucose, active insulin, carbohydrates, medications, and custom health reminders with physical PDF sharing.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

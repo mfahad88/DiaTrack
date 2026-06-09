@@ -65,6 +65,13 @@ fun MainAppScreen(viewModel: TrackerViewModel) {
     val waterIntakes by viewModel.waterIntakes.collectAsState()
     val exercises by viewModel.exercises.collectAsState()
     val bloodPressures by viewModel.bloodPressures.collectAsState()
+    val sleepLogs by viewModel.sleepLogs.collectAsState()
+    val stressMoodLogs by viewModel.stressMoodLogs.collectAsState()
+    val weightLogs by viewModel.weightLogs.collectAsState()
+    val labResults by viewModel.labResults.collectAsState()
+    val sickDayLogs by viewModel.sickDayLogs.collectAsState()
+    val foodPhotoEstimates by viewModel.foodPhotoEstimates.collectAsState()
+    val wearableSnapshots by viewModel.wearableSnapshots.collectAsState()
 
     // Dialog state controllers
     var showGlucoseDialog by remember { mutableStateOf(false) }
@@ -75,6 +82,13 @@ fun MainAppScreen(viewModel: TrackerViewModel) {
     var showWaterDialog by remember { mutableStateOf(false) }
     var showExerciseDialog by remember { mutableStateOf(false) }
     var showBloodPressureDialog by remember { mutableStateOf(false) }
+    var showSleepDialog by remember { mutableStateOf(false) }
+    var showStressMoodDialog by remember { mutableStateOf(false) }
+    var showWeightDialog by remember { mutableStateOf(false) }
+    var showLabDialog by remember { mutableStateOf(false) }
+    var showSickDayDialog by remember { mutableStateOf(false) }
+    var showFoodEstimateDialog by remember { mutableStateOf(false) }
+    var showWearableDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -172,8 +186,9 @@ fun MainAppScreen(viewModel: TrackerViewModel) {
                     Triple("Dashboard", Icons.Default.Home, 0),
                     Triple("Glucose", Icons.Default.Bloodtype, 1),
                     Triple("Loggers", Icons.Default.List, 2),
-                    Triple("AI Trends", Icons.Default.AutoAwesome, 3),
-                    Triple("Settings", Icons.Default.Settings, 4)
+                    Triple("Health", Icons.Default.MonitorHeart, 3),
+                    Triple("AI Trends", Icons.Default.AutoAwesome, 4),
+                    Triple("Settings", Icons.Default.Settings, 5)
                 )
 
                 tabs.forEach { (label, icon, tabIdx) ->
@@ -268,7 +283,10 @@ fun MainAppScreen(viewModel: TrackerViewModel) {
                         waterIntakes = waterIntakes,
                         exercises = exercises,
                         bloodPressures = bloodPressures,
+                        predictionResult = prediction,
+                        isAnalyzingPrediction = isAnalyzing,
                         unit = currentUnit,
+                        onRefreshPrediction = { viewModel.runAiPrediction() },
                         onAddGlucose = { showGlucoseDialog = true },
                         onAddMeal = { showMealDialog = true },
                         onAddInsulin = { showInsulinDialog = true },
@@ -306,12 +324,38 @@ fun MainAppScreen(viewModel: TrackerViewModel) {
                         onAddBloodPressure = { showBloodPressureDialog = true },
                         onDeleteBloodPressure = { viewModel.deleteBloodPressure(it) }
                     )
-                    3 -> PredictionTab(
+                    3 -> ExpandedHealthTab(
+                        sleepLogs = sleepLogs,
+                        stressMoodLogs = stressMoodLogs,
+                        weightLogs = weightLogs,
+                        labResults = labResults,
+                        sickDayLogs = sickDayLogs,
+                        foodPhotoEstimates = foodPhotoEstimates,
+                        wearableSnapshots = wearableSnapshots,
+                        readings = readings,
+                        medLogs = medLogs,
+                        medications = medications,
+                        onAddSleep = { showSleepDialog = true },
+                        onDeleteSleep = { viewModel.deleteSleepLog(it) },
+                        onAddStress = { showStressMoodDialog = true },
+                        onDeleteStress = { viewModel.deleteStressMoodLog(it) },
+                        onAddWeight = { showWeightDialog = true },
+                        onDeleteWeight = { viewModel.deleteWeightLog(it) },
+                        onAddLab = { showLabDialog = true },
+                        onDeleteLab = { viewModel.deleteLabResult(it) },
+                        onAddSickDay = { showSickDayDialog = true },
+                        onDeleteSickDay = { viewModel.deleteSickDayLog(it) },
+                        onAddFoodEstimate = { showFoodEstimateDialog = true },
+                        onDeleteFoodEstimate = { viewModel.deleteFoodPhotoEstimate(it) },
+                        onAddWearable = { showWearableDialog = true },
+                        onDeleteWearable = { viewModel.deleteWearableSnapshot(it) }
+                    )
+                    4 -> PredictionTab(
                         predictionResult = prediction,
                         isAnalyzing = isAnalyzing,
                         onRefresh = { viewModel.runAiPrediction() }
                     )
-                    4 -> SettingsTab(
+                    5 -> SettingsTab(
                         profile = profile,
                         thresholds = threshold,
                         reminders = reminders,
@@ -323,7 +367,8 @@ fun MainAppScreen(viewModel: TrackerViewModel) {
                         onAddReminder = { showReminderDialog = true },
                         onToggleReminder = { viewModel.toggleReminder(it) },
                         onDeleteReminder = { viewModel.deleteReminder(it) },
-                        onLoadSample = { viewModel.loadSampleDataset() }
+                        onLoadSample = { viewModel.loadSampleDataset() },
+                        onRemoveAllData = { viewModel.removeAllData() }
                     )
                 }
             }
@@ -426,6 +471,76 @@ fun MainAppScreen(viewModel: TrackerViewModel) {
             }
         )
     }
+
+    if (showSleepDialog) {
+        SleepLogDialog(
+            onDismiss = { showSleepDialog = false },
+            onSave = { hours, quality, wakeGlucose, notes ->
+                viewModel.addSleepLog(hours, quality, wakeGlucose, notes)
+                showSleepDialog = false
+            }
+        )
+    }
+
+    if (showStressMoodDialog) {
+        StressMoodDialog(
+            onDismiss = { showStressMoodDialog = false },
+            onSave = { stress, mood, symptoms, notes ->
+                viewModel.addStressMoodLog(stress, mood, symptoms, notes)
+                showStressMoodDialog = false
+            }
+        )
+    }
+
+    if (showWeightDialog) {
+        WeightLogDialog(
+            onDismiss = { showWeightDialog = false },
+            onSave = { weight, waist, bmi, notes ->
+                viewModel.addWeightLog(weight, waist, bmi, notes)
+                showWeightDialog = false
+            }
+        )
+    }
+
+    if (showLabDialog) {
+        LabResultDialog(
+            onDismiss = { showLabDialog = false },
+            onSave = { a1c, ldl, hdl, trig, creatinine, egfr, urine, ketones, notes ->
+                viewModel.addLabResult(a1c, ldl, hdl, trig, creatinine, egfr, urine, ketones, notes)
+                showLabDialog = false
+            }
+        )
+    }
+
+    if (showSickDayDialog) {
+        SickDayDialog(
+            onDismiss = { showSickDayDialog = false },
+            onSave = { temp, ketones, appetite, vomiting, hydration, notes ->
+                viewModel.addSickDayLog(temp, ketones, appetite, vomiting, hydration, notes)
+                showSickDayDialog = false
+            }
+        )
+    }
+
+    if (showFoodEstimateDialog) {
+        FoodEstimateDialog(
+            onDismiss = { showFoodEstimateDialog = false },
+            onSave = { description, notes ->
+                viewModel.addFoodPhotoEstimate(description, notes)
+                showFoodEstimateDialog = false
+            }
+        )
+    }
+
+    if (showWearableDialog) {
+        WearableSnapshotDialog(
+            onDismiss = { showWearableDialog = false },
+            onSave = { source, steps, heartRate, sleepHours, activeCalories, notes ->
+                viewModel.addWearableSnapshot(source, steps, heartRate, sleepHours, activeCalories, notes)
+                showWearableDialog = false
+            }
+        )
+    }
 }
 
 // --- SUB TABS MODULES IMPLEMENTATIONS ---
@@ -441,7 +556,10 @@ fun DashboardTab(
     waterIntakes: List<WaterIntake>,
     exercises: List<Exercise>,
     bloodPressures: List<BloodPressure>,
+    predictionResult: TrendPredictionResult?,
+    isAnalyzingPrediction: Boolean,
     unit: String,
+    onRefreshPrediction: () -> Unit,
     onAddGlucose: () -> Unit,
     onAddMeal: () -> Unit,
     onAddInsulin: () -> Unit,
@@ -460,6 +578,15 @@ fun DashboardTab(
     val todaysInsulin = insulinLogs.filter { isToday(it.timestamp) }.sumOf { it.units }
     val todaysMeds = medLogs.filter { isToday(it.timestamp) }.size
     val todaysCarbs = meals.filter { isToday(it.timestamp) }.sumOf { it.carbsGrams }
+    val threeHourPrediction = predictionResult?.predictions?.firstOrNull {
+        it.intervalLabel.equals("3h", ignoreCase = true) || it.intervalIndex == 1
+    }
+
+    LaunchedEffect(readings.size, predictionResult) {
+        if (readings.isNotEmpty() && predictionResult == null && !isAnalyzingPrediction) {
+            onRefreshPrediction()
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -747,6 +874,81 @@ fun DashboardTab(
             }
         }
 
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                border = BorderStroke(1.dp, Color(0xFFBFD4F2))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "AI 3-HOUR GLUCOSE FORECAST",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF123B7A),
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        when {
+                            isAnalyzingPrediction -> {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    AnimatedRotationIcon(
+                                        imageVector = Icons.Default.Autorenew,
+                                        contentDescription = "Analyzing 3 hour forecast",
+                                        tint = Color(0xFF123B7A),
+                                        size = 18.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Calculating next 3 hours...", fontWeight = FontWeight.Bold, color = Color(0xFF123B7A))
+                                }
+                            }
+                            threeHourPrediction != null -> {
+                                Text(
+                                    text = "${String.format("%.1f", threeHourPrediction.glucoseRangeMin)} - ${String.format("%.1f", threeHourPrediction.glucoseRangeMax)} $unit",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF123B7A)
+                                )
+                                Text(
+                                    text = "${threeHourPrediction.trend} | ${threeHourPrediction.confidence} confidence",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF123B7A).copy(alpha = 0.72f)
+                                )
+                            }
+                            readings.isEmpty() -> {
+                                Text("Log a sugar reading to generate a 3-hour forecast.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF123B7A))
+                            }
+                            else -> {
+                                Text("Forecast unavailable. Tap refresh to analyze.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF123B7A))
+                            }
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onRefreshPrediction,
+                        enabled = !isAnalyzingPrediction && readings.isNotEmpty(),
+                        modifier = Modifier
+                            .size(42.dp)
+                            .background(Color.White.copy(alpha = 0.7f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh 3 hour glucose forecast",
+                            tint = Color(0xFF123B7A)
+                        )
+                    }
+                }
+            }
+        }
+
         // Today's Totals summary banner
         item {
             Card(
@@ -994,6 +1196,183 @@ private fun isToday(timestamp: Long): Boolean {
     return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
             cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
 }
+
+@Composable
+fun ExpandedHealthTab(
+    sleepLogs: List<SleepLog>,
+    stressMoodLogs: List<StressMoodLog>,
+    weightLogs: List<WeightLog>,
+    labResults: List<LabResult>,
+    sickDayLogs: List<SickDayLog>,
+    foodPhotoEstimates: List<FoodPhotoEstimate>,
+    wearableSnapshots: List<WearableSnapshot>,
+    readings: List<GlucoseReading>,
+    medLogs: List<MedicationLog>,
+    medications: List<Medication>,
+    onAddSleep: () -> Unit,
+    onDeleteSleep: (SleepLog) -> Unit,
+    onAddStress: () -> Unit,
+    onDeleteStress: (StressMoodLog) -> Unit,
+    onAddWeight: () -> Unit,
+    onDeleteWeight: (WeightLog) -> Unit,
+    onAddLab: () -> Unit,
+    onDeleteLab: (LabResult) -> Unit,
+    onAddSickDay: () -> Unit,
+    onDeleteSickDay: (SickDayLog) -> Unit,
+    onAddFoodEstimate: () -> Unit,
+    onDeleteFoodEstimate: (FoodPhotoEstimate) -> Unit,
+    onAddWearable: () -> Unit,
+    onDeleteWearable: (WearableSnapshot) -> Unit
+) {
+    val todayMedicationLogs = medLogs.count { isToday(it.timestamp) }
+    val adherenceScore = if (medications.isEmpty()) 100 else ((todayMedicationLogs.toFloat() / medications.size.toFloat()) * 100).toInt().coerceIn(0, 100)
+    val avgGlucose = readings.take(14).map { if (it.unit == "mmol/L") it.value * 18.0 else it.value }.average().takeIf { !it.isNaN() } ?: 0.0
+    val lastLab = labResults.firstOrNull()
+    val lastSleep = sleepLogs.firstOrNull()
+    val lastStress = stressMoodLogs.firstOrNull()
+    val lastWeight = weightLogs.firstOrNull()
+    val doctorPrep = buildList {
+        if (avgGlucose > 0) add("Recent average glucose: ${String.format("%.0f", avgGlucose)} mg/dL.")
+        lastLab?.let { if (it.hba1c > 0) add("Latest HbA1c: ${it.hba1c}%.") }
+        if (adherenceScore < 80) add("Medication adherence today is below 80%.")
+        lastStress?.let { if (it.stressLevel >= 8) add("High stress was recently logged.") }
+        lastSleep?.let { if (it.durationHours < 6) add("Short sleep may affect fasting glucose.") }
+        if (sickDayLogs.isNotEmpty()) add("Review sick-day and ketone notes.")
+    }.ifEmpty { listOf("Logs are ready for review; add labs or lifestyle notes for a richer visit summary.") }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Text("Expanded Health", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Text("Sleep, stress, weight, labs, sick days, food estimates, and wearable snapshots.", style = MaterialTheme.typography.bodySmall, color = Color.GRAY)
+        }
+
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                StatCard("Adherence", "$adherenceScore", "%", Color(0xFFE8F0FE), Color(0xFF123B7A), Modifier.weight(1f), progress = adherenceScore / 100f)
+                StatCard("HbA1c", if ((lastLab?.hba1c ?: 0.0) > 0) "${lastLab?.hba1c}" else "--", "%", Color(0xFFFFF1D6), Color(0xFF6A3D00), Modifier.weight(1f), subtitle = "latest lab")
+            }
+        }
+
+        item {
+            HealthInsightCard(
+                title = "Doctor Visit Prep",
+                icon = Icons.Default.Assignment,
+                lines = doctorPrep
+            )
+        }
+
+        item {
+            HealthActionGrid(
+                actions = listOf(
+                    "Sleep" to onAddSleep,
+                    "Stress" to onAddStress,
+                    "Weight" to onAddWeight,
+                    "Labs" to onAddLab,
+                    "Sick Day" to onAddSickDay,
+                    "Food AI" to onAddFoodEstimate,
+                    "Wearable" to onAddWearable
+                )
+            )
+        }
+
+        item { HealthSectionHeader("Sleep", "Latest: ${lastSleep?.durationHours ?: "--"} h ${lastSleep?.quality ?: ""}") }
+        items(sleepLogs.take(3)) { log ->
+            HealthLogRow(Icons.Default.Bedtime, "${log.durationHours} h - ${log.quality}", "Wake glucose ${if (log.wakeGlucose > 0) log.wakeGlucose else "--"} | ${shortDate(log.timestamp)}", log.notes) { onDeleteSleep(log) }
+        }
+
+        item { HealthSectionHeader("Stress & Mood", "Latest stress: ${lastStress?.stressLevel ?: "--"}/10") }
+        items(stressMoodLogs.take(3)) { log ->
+            HealthLogRow(Icons.Default.SentimentSatisfied, "${log.mood} - stress ${log.stressLevel}/10", "${log.symptoms} | ${shortDate(log.timestamp)}", log.notes) { onDeleteStress(log) }
+        }
+
+        item { HealthSectionHeader("Weight & Labs", "Weight ${lastWeight?.weightKg ?: "--"} kg") }
+        items(weightLogs.take(2)) { log ->
+            HealthLogRow(Icons.Default.MonitorWeight, "${log.weightKg} kg", "Waist ${log.waistCm} cm | BMI ${log.bmi}", log.notes) { onDeleteWeight(log) }
+        }
+        items(labResults.take(2)) { lab ->
+            HealthLogRow(Icons.Default.Biotech, "HbA1c ${lab.hba1c}% | eGFR ${lab.egfr}", "LDL ${lab.ldl}, HDL ${lab.hdl}, TG ${lab.triglycerides}, ketones ${lab.ketones}", lab.notes) { onDeleteLab(lab) }
+        }
+
+        item { HealthSectionHeader("Sick Day", "${sickDayLogs.size} illness logs") }
+        items(sickDayLogs.take(3)) { log ->
+            HealthLogRow(Icons.Default.Sick, "${log.temperatureC} C | ketones ${log.ketones}", "Appetite ${log.appetite}, vomiting ${if (log.vomiting) "yes" else "no"}", log.notes) { onDeleteSickDay(log) }
+        }
+
+        item { HealthSectionHeader("AI Food Estimates", "${foodPhotoEstimates.size} estimates") }
+        items(foodPhotoEstimates.take(3)) { estimate ->
+            HealthLogRow(Icons.Default.Restaurant, estimate.description, "${estimate.estimatedCarbsGrams}g carbs, ${estimate.estimatedCalories} cal, ${estimate.confidence} confidence", estimate.notes) { onDeleteFoodEstimate(estimate) }
+        }
+
+        item { HealthSectionHeader("Wearable / Health Connect", "${wearableSnapshots.size} snapshots") }
+        items(wearableSnapshots.take(3)) { snap ->
+            HealthLogRow(Icons.Default.DirectionsWalk, "${snap.source}: ${snap.steps} steps", "HR ${snap.heartRate}, sleep ${snap.sleepHours} h, active ${snap.activeCalories} cal", snap.notes) { onDeleteWearable(snap) }
+        }
+    }
+}
+
+@Composable
+private fun HealthActionGrid(actions: List<Pair<String, () -> Unit>>) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        actions.chunked(3).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                row.forEach { (label, action) ->
+                    FilledTonalButton(onClick = action, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(label, fontSize = 11.sp, maxLines = 1)
+                    }
+                }
+                repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HealthInsightCard(title: String, icon: ImageVector, lines: List<String>) {
+    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFE9F6EF)), shape = RoundedCornerShape(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = null, tint = Color(0xFF006D32))
+                Spacer(Modifier.width(8.dp))
+                Text(title, fontWeight = FontWeight.Bold)
+            }
+            lines.forEach { Text("- $it", style = MaterialTheme.typography.bodySmall, color = Color(0xFF27352B)) }
+        }
+    }
+}
+
+@Composable
+private fun HealthSectionHeader(title: String, subtitle: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(subtitle, style = MaterialTheme.typography.labelSmall, color = Color.GRAY)
+    }
+}
+
+@Composable
+private fun HealthLogRow(icon: ImageVector, title: String, subtitle: String, notes: String, onDelete: () -> Unit) {
+    Card(shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = Color.GRAY)
+                if (notes.isNotBlank()) Text(notes, style = MaterialTheme.typography.labelSmall)
+            }
+            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Delete") }
+        }
+    }
+}
+
+private fun shortDate(timestamp: Long): String =
+    SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(timestamp))
 
 @Composable
 fun GlucoseTab(
@@ -2026,9 +2405,11 @@ fun SettingsTab(
     onAddReminder: () -> Unit,
     onToggleReminder: (Reminder) -> Unit,
     onDeleteReminder: (Reminder) -> Unit,
-    onLoadSample: () -> Unit
+    onLoadSample: () -> Unit,
+    onRemoveAllData: () -> Unit
 ) {
     val context = LocalContext.current
+    var showRemoveAllDataDialog by remember { mutableStateOf(false) }
 
     // Local profile variables for form inputs
     var nameInput by remember { mutableStateOf(profile.name) }
@@ -2154,6 +2535,87 @@ fun SettingsTab(
                     Text("Load", fontWeight = FontWeight.Bold)
                 }
             }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("remove_all_data_card"),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF9DEDC),
+                contentColor = Color(0xFF410E0B)
+            ),
+            shape = RoundedCornerShape(20.dp),
+            border = BorderStroke(1.dp, Color(0xFFB3261E))
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "DANGER ZONE",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFB3261E),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Remove All Data",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF410E0B)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Clears logs, medications, reminders, expanded health records, alerts, and AI predictions.",
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
+                        color = Color(0xFF410E0B).copy(alpha = 0.75f)
+                    )
+                }
+                Button(
+                    onClick = { showRemoveAllDataDialog = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFB3261E),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.testTag("action_remove_all_data")
+                ) {
+                    Icon(imageVector = Icons.Default.DeleteForever, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Remove", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        if (showRemoveAllDataDialog) {
+            AlertDialog(
+                onDismissRequest = { showRemoveAllDataDialog = false },
+                icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFB3261E)) },
+                title = { Text("Remove all data?") },
+                text = {
+                    Text("This will permanently delete all tracked health logs, medications, reminders, and predictions. Profile and alert thresholds will reset to defaults.")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onRemoveAllData()
+                            showRemoveAllDataDialog = false
+                            Toast.makeText(context, "All DiaTrack data removed.", Toast.LENGTH_LONG).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB3261E))
+                    ) {
+                        Text("Remove All")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRemoveAllDataDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
 
         // Medical Card Profile Section

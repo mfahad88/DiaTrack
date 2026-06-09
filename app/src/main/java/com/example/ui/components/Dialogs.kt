@@ -875,3 +875,193 @@ fun BloodPressureLogDialog(
         }
     )
 }
+
+@Composable
+fun SleepLogDialog(onDismiss: () -> Unit, onSave: (Double, String, Double, String) -> Unit) {
+    var hours by remember { mutableStateOf("7.0") }
+    var quality by remember { mutableStateOf("Good") }
+    var wakeGlucose by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    val qualities = listOf("Poor", "Fair", "Good", "Excellent")
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Log Sleep", fontWeight = FontWeight.Bold) },
+        text = { SimpleFormColumn {
+            OutlinedTextField(hours, { hours = it }, label = { Text("Sleep duration (hours)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            ChipRow(qualities, quality) { quality = it }
+            OutlinedTextField(wakeGlucose, { wakeGlucose = it }, label = { Text("Wake glucose optional") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(notes, { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        } },
+        confirmButton = { Button(onClick = { onSave(hours.toDoubleOrNull() ?: 7.0, quality, wakeGlucose.toDoubleOrNull() ?: 0.0, notes) }) { Text("Log Sleep") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun StressMoodDialog(onDismiss: () -> Unit, onSave: (Int, String, String, String) -> Unit) {
+    var stress by remember { mutableStateOf("5") }
+    var mood by remember { mutableStateOf("Steady") }
+    var symptoms by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Log Stress & Mood", fontWeight = FontWeight.Bold) },
+        text = { SimpleFormColumn {
+            OutlinedTextField(stress, { stress = it }, label = { Text("Stress level 1-10") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            ChipRow(listOf("Calm", "Steady", "Anxious", "Low", "Irritable"), mood) { mood = it }
+            OutlinedTextField(symptoms, { symptoms = it }, label = { Text("Symptoms") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(notes, { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        } },
+        confirmButton = { Button(onClick = { onSave((stress.toIntOrNull() ?: 5).coerceIn(1, 10), mood, symptoms, notes) }) { Text("Log Mood") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun WeightLogDialog(onDismiss: () -> Unit, onSave: (Double, Double, Double, String) -> Unit) {
+    var weight by remember { mutableStateOf("") }
+    var waist by remember { mutableStateOf("") }
+    var bmi by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Log Weight", fontWeight = FontWeight.Bold) },
+        text = { SimpleFormColumn {
+            OutlinedTextField(weight, { weight = it }, label = { Text("Weight (kg)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(waist, { waist = it }, label = { Text("Waist (cm)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(bmi, { bmi = it }, label = { Text("BMI optional") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(notes, { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        } },
+        confirmButton = { Button(onClick = { onSave(weight.toDoubleOrNull() ?: 0.0, waist.toDoubleOrNull() ?: 0.0, bmi.toDoubleOrNull() ?: 0.0, notes) }) { Text("Log Weight") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun LabResultDialog(onDismiss: () -> Unit, onSave: (Double, Double, Double, Double, Double, Double, Double, String, String) -> Unit) {
+    var a1c by remember { mutableStateOf("") }
+    var ldl by remember { mutableStateOf("") }
+    var hdl by remember { mutableStateOf("") }
+    var trig by remember { mutableStateOf("") }
+    var creatinine by remember { mutableStateOf("") }
+    var egfr by remember { mutableStateOf("") }
+    var urine by remember { mutableStateOf("") }
+    var ketones by remember { mutableStateOf("Negative") }
+    var notes by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Log Labs", fontWeight = FontWeight.Bold) },
+        text = { SimpleFormColumn {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(a1c, { a1c = it }, label = { Text("HbA1c %") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                OutlinedTextField(egfr, { egfr = it }, label = { Text("eGFR") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(ldl, { ldl = it }, label = { Text("LDL") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                OutlinedTextField(hdl, { hdl = it }, label = { Text("HDL") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            }
+            OutlinedTextField(trig, { trig = it }, label = { Text("Triglycerides") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(creatinine, { creatinine = it }, label = { Text("Creatinine") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(urine, { urine = it }, label = { Text("Urine albumin") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            ChipRow(listOf("Negative", "Trace", "Small", "Moderate", "Large"), ketones) { ketones = it }
+            OutlinedTextField(notes, { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        } },
+        confirmButton = { Button(onClick = { onSave(a1c.toDoubleOrNull() ?: 0.0, ldl.toDoubleOrNull() ?: 0.0, hdl.toDoubleOrNull() ?: 0.0, trig.toDoubleOrNull() ?: 0.0, creatinine.toDoubleOrNull() ?: 0.0, egfr.toDoubleOrNull() ?: 0.0, urine.toDoubleOrNull() ?: 0.0, ketones, notes) }) { Text("Log Labs") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun SickDayDialog(onDismiss: () -> Unit, onSave: (Double, String, String, Boolean, Boolean, String) -> Unit) {
+    var temp by remember { mutableStateOf("") }
+    var ketones by remember { mutableStateOf("Negative") }
+    var appetite by remember { mutableStateOf("Normal") }
+    var vomiting by remember { mutableStateOf(false) }
+    var hydration by remember { mutableStateOf(false) }
+    var notes by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Log Sick Day", fontWeight = FontWeight.Bold) },
+        text = { SimpleFormColumn {
+            OutlinedTextField(temp, { temp = it }, label = { Text("Temperature C") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+            ChipRow(listOf("Negative", "Trace", "Small", "Moderate", "Large"), ketones) { ketones = it }
+            ChipRow(listOf("Normal", "Low", "None"), appetite) { appetite = it }
+            Row(verticalAlignment = Alignment.CenterVertically) { Checkbox(vomiting, { vomiting = it }); Text("Vomiting") }
+            Row(verticalAlignment = Alignment.CenterVertically) { Checkbox(hydration, { hydration = it }); Text("Hydration concern") }
+            OutlinedTextField(notes, { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        } },
+        confirmButton = { Button(onClick = { onSave(temp.toDoubleOrNull() ?: 0.0, ketones, appetite, vomiting, hydration, notes) }) { Text("Log Sick Day") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun FoodEstimateDialog(onDismiss: () -> Unit, onSave: (String, String) -> Unit) {
+    var description by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("AI Food Estimate", fontWeight = FontWeight.Bold) },
+        text = { SimpleFormColumn {
+            OutlinedTextField(description, { description = it }, label = { Text("Describe meal or photo") }, placeholder = { Text("rice, chicken curry, salad") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(notes, { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+            Text("This estimates macros from text/photo notes. Verify portions before treatment decisions.", fontSize = 11.sp, color = Color.Gray)
+        } },
+        confirmButton = { Button(onClick = { onSave(description, notes) }) { Text("Estimate") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun WearableSnapshotDialog(onDismiss: () -> Unit, onSave: (String, Int, Int, Double, Double, String) -> Unit) {
+    var source by remember { mutableStateOf("Health Connect") }
+    var steps by remember { mutableStateOf("") }
+    var heart by remember { mutableStateOf("") }
+    var sleep by remember { mutableStateOf("") }
+    var calories by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Wearable Snapshot", fontWeight = FontWeight.Bold) },
+        text = { SimpleFormColumn {
+            OutlinedTextField(source, { source = it }, label = { Text("Source") }, modifier = Modifier.fillMaxWidth())
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(steps, { steps = it }, label = { Text("Steps") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                OutlinedTextField(heart, { heart = it }, label = { Text("Heart") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(sleep, { sleep = it }, label = { Text("Sleep h") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                OutlinedTextField(calories, { calories = it }, label = { Text("Active cal") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            }
+            OutlinedTextField(notes, { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        } },
+        confirmButton = { Button(onClick = { onSave(source, steps.toIntOrNull() ?: 0, heart.toIntOrNull() ?: 0, sleep.toDoubleOrNull() ?: 0.0, calories.toDoubleOrNull() ?: 0.0, notes) }) { Text("Log Snapshot") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+private fun SimpleFormColumn(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        content = content
+    )
+}
+
+@Composable
+private fun ChipRow(options: List<String>, selected: String, onSelect: (String) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        options.take(5).forEach {
+            SuggestionChip(
+                onClick = { onSelect(it) },
+                label = { Text(it, fontSize = 10.sp) },
+                colors = SuggestionChipDefaults.suggestionChipColors(
+                    containerColor = if (selected == it) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                )
+            )
+        }
+    }
+}

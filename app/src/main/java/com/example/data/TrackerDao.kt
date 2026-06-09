@@ -104,6 +104,9 @@ interface TrackerDao {
     @Delete
     suspend fun deleteReminder(reminder: Reminder)
 
+    @Query("DELETE FROM reminders")
+    suspend fun deleteAllReminders()
+
 
     // --- Thresholds ---
     @Query("SELECT * FROM alert_thresholds WHERE id = 1 LIMIT 1")
@@ -164,4 +167,95 @@ interface TrackerDao {
 
     @Query("DELETE FROM blood_pressures")
     suspend fun deleteAllBloodPressures()
+
+    // --- Sleep ---
+    @Query("SELECT * FROM sleep_logs ORDER BY timestamp DESC")
+    fun getAllSleepLogs(): Flow<List<SleepLog>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSleepLog(log: SleepLog)
+
+    @Delete
+    suspend fun deleteSleepLog(log: SleepLog)
+
+    @Query("DELETE FROM sleep_logs")
+    suspend fun deleteAllSleepLogs()
+
+    // --- Stress & Mood ---
+    @Query("SELECT * FROM stress_mood_logs ORDER BY timestamp DESC")
+    fun getAllStressMoodLogs(): Flow<List<StressMoodLog>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStressMoodLog(log: StressMoodLog)
+
+    @Delete
+    suspend fun deleteStressMoodLog(log: StressMoodLog)
+
+    @Query("DELETE FROM stress_mood_logs")
+    suspend fun deleteAllStressMoodLogs()
+
+    // --- Weight ---
+    @Query("SELECT * FROM weight_logs ORDER BY timestamp DESC")
+    fun getAllWeightLogs(): Flow<List<WeightLog>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWeightLog(log: WeightLog)
+
+    @Delete
+    suspend fun deleteWeightLog(log: WeightLog)
+
+    @Query("DELETE FROM weight_logs")
+    suspend fun deleteAllWeightLogs()
+
+    // --- Labs ---
+    @Query("SELECT * FROM lab_results ORDER BY timestamp DESC")
+    fun getAllLabResults(): Flow<List<LabResult>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLabResult(result: LabResult)
+
+    @Delete
+    suspend fun deleteLabResult(result: LabResult)
+
+    @Query("DELETE FROM lab_results")
+    suspend fun deleteAllLabResults()
+
+    // --- Sick Day ---
+    @Query("SELECT * FROM sick_day_logs ORDER BY timestamp DESC")
+    fun getAllSickDayLogs(): Flow<List<SickDayLog>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSickDayLog(log: SickDayLog)
+
+    @Delete
+    suspend fun deleteSickDayLog(log: SickDayLog)
+
+    @Query("DELETE FROM sick_day_logs")
+    suspend fun deleteAllSickDayLogs()
+
+    // --- Food Photo AI Estimates ---
+    @Query("SELECT * FROM food_photo_estimates ORDER BY timestamp DESC")
+    fun getAllFoodPhotoEstimates(): Flow<List<FoodPhotoEstimate>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFoodPhotoEstimate(estimate: FoodPhotoEstimate)
+
+    @Delete
+    suspend fun deleteFoodPhotoEstimate(estimate: FoodPhotoEstimate)
+
+    @Query("DELETE FROM food_photo_estimates")
+    suspend fun deleteAllFoodPhotoEstimates()
+
+    // --- Wearable / Health Connect Snapshots ---
+    @Query("SELECT * FROM wearable_snapshots ORDER BY timestamp DESC")
+    fun getAllWearableSnapshots(): Flow<List<WearableSnapshot>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWearableSnapshot(snapshot: WearableSnapshot)
+
+    @Delete
+    suspend fun deleteWearableSnapshot(snapshot: WearableSnapshot)
+
+    @Query("DELETE FROM wearable_snapshots")
+    suspend fun deleteAllWearableSnapshots()
 }

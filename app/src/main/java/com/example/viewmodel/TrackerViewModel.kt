@@ -5,7 +5,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.api.GeminiPredictionService
+import com.example.api.MediaPipePredictionService
 import com.example.api.TrendPredictionResult
 import com.example.data.*
 import com.example.repository.TrackerRepository
@@ -46,6 +46,27 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val bloodPressures: StateFlow<List<BloodPressure>> = repository.allBloodPressures
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val sleepLogs: StateFlow<List<SleepLog>> = repository.allSleepLogs
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val stressMoodLogs: StateFlow<List<StressMoodLog>> = repository.allStressMoodLogs
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val weightLogs: StateFlow<List<WeightLog>> = repository.allWeightLogs
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val labResults: StateFlow<List<LabResult>> = repository.allLabResults
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val sickDayLogs: StateFlow<List<SickDayLog>> = repository.allSickDayLogs
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val foodPhotoEstimates: StateFlow<List<FoodPhotoEstimate>> = repository.allFoodPhotoEstimates
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val wearableSnapshots: StateFlow<List<WearableSnapshot>> = repository.allWearableSnapshots
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Unit Preference: default to "mg/dL", can be toggled by user
@@ -254,9 +275,159 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun addSleepLog(durationHours: Double, quality: String, wakeGlucose: Double, notes: String) {
+        viewModelScope.launch {
+            repository.insertSleepLog(SleepLog(durationHours = durationHours, quality = quality, wakeGlucose = wakeGlucose, notes = notes))
+            if (durationHours < 6.0) {
+                _isEmergency.value = false
+                _activeAlert.value = "SLEEP PATTERN NOTICE: Short sleep was logged. Poor or reduced sleep can raise fasting glucose and appetite signals; compare tomorrow morning glucose with this entry."
+            }
+        }
+    }
+
+    fun deleteSleepLog(log: SleepLog) {
+        viewModelScope.launch { repository.deleteSleepLog(log) }
+    }
+
+    fun addStressMoodLog(stressLevel: Int, mood: String, symptoms: String, notes: String) {
+        viewModelScope.launch {
+            repository.insertStressMoodLog(StressMoodLog(stressLevel = stressLevel, mood = mood, symptoms = symptoms, notes = notes))
+            val recentHigh = glucoseReadings.value.firstOrNull()?.let {
+                val valueMgDl = if (it.unit == "mmol/L") it.value * 18.0 else it.value
+                valueMgDl > alertThreshold.value.highThreshold
+            } == true
+            if (stressLevel >= 8 && recentHigh) {
+                _isEmergency.value = false
+                _activeAlert.value = "STRESS-GLUCOSE PATTERN: High stress and elevated glucose are close together in your log. Add a follow-up glucose check reminder if this pattern repeats."
+            }
+        }
+    }
+
+    fun deleteStressMoodLog(log: StressMoodLog) {
+        viewModelScope.launch { repository.deleteStressMoodLog(log) }
+    }
+
+    fun addWeightLog(weightKg: Double, waistCm: Double, bmi: Double, notes: String) {
+        viewModelScope.launch { repository.insertWeightLog(WeightLog(weightKg = weightKg, waistCm = waistCm, bmi = bmi, notes = notes)) }
+    }
+
+    fun deleteWeightLog(log: WeightLog) {
+        viewModelScope.launch { repository.deleteWeightLog(log) }
+    }
+
+    fun addLabResult(hba1c: Double, ldl: Double, hdl: Double, triglycerides: Double, creatinine: Double, egfr: Double, urineAlbumin: Double, ketones: String, notes: String) {
+        viewModelScope.launch {
+            repository.insertLabResult(
+                LabResult(
+                    hba1c = hba1c,
+                    ldl = ldl,
+                    hdl = hdl,
+                    triglycerides = triglycerides,
+                    creatinine = creatinine,
+                    egfr = egfr,
+                    urineAlbumin = urineAlbumin,
+                    ketones = ketones,
+                    notes = notes
+                )
+            )
+            if (hba1c >= 8.0 || egfr in 0.1..59.9 || ketones.equals("moderate", true) || ketones.equals("large", true)) {
+                _isEmergency.value = false
+                _activeAlert.value = "LAB REVIEW NOTICE: One or more lab values are outside common diabetes monitoring targets. Share the report with your clinician before changing any treatment."
+            }
+        }
+    }
+
+    fun deleteLabResult(result: LabResult) {
+        viewModelScope.launch { repository.deleteLabResult(result) }
+    }
+
+    fun addSickDayLog(temperatureC: Double, ketones: String, appetite: String, vomiting: Boolean, hydrationConcern: Boolean, notes: String) {
+        viewModelScope.launch {
+            repository.insertSickDayLog(
+                SickDayLog(
+                    temperatureC = temperatureC,
+                    ketones = ketones,
+                    appetite = appetite,
+                    vomiting = vomiting,
+                    hydrationConcern = hydrationConcern,
+                    notes = notes
+                )
+            )
+            if (vomiting || hydrationConcern || ketones.equals("moderate", true) || ketones.equals("large", true)) {
+                _isEmergency.value = true
+                _activeAlert.value = "SICK DAY SAFETY ALERT: Illness with vomiting, dehydration concern, or elevated ketones can become urgent for diabetes. Check glucose/ketones as instructed and seek medical care if symptoms worsen."
+            }
+        }
+    }
+
+    fun deleteSickDayLog(log: SickDayLog) {
+        viewModelScope.launch { repository.deleteSickDayLog(log) }
+    }
+
+    fun addFoodPhotoEstimate(description: String, notes: String) {
+        viewModelScope.launch {
+            val text = description.lowercase()
+            val carbs = when {
+                listOf("rice", "pasta", "bread", "pizza", "fries", "potato").any { text.contains(it) } -> 60.0
+                listOf("oat", "banana", "wrap", "sandwich").any { text.contains(it) } -> 45.0
+                listOf("salad", "egg", "fish", "chicken").any { text.contains(it) } -> 15.0
+                else -> 30.0
+            }
+            val calories = carbs * 4.0 + if (text.contains("fried") || text.contains("cheese")) 250.0 else 180.0
+            val protein = if (listOf("egg", "fish", "chicken", "meat", "yogurt").any { text.contains(it) }) 25.0 else 8.0
+            val fat = if (listOf("fried", "cheese", "butter", "cream").any { text.contains(it) }) 22.0 else 8.0
+            repository.insertFoodPhotoEstimate(
+                FoodPhotoEstimate(
+                    description = description.ifBlank { "Meal photo estimate" },
+                    estimatedCarbsGrams = carbs,
+                    estimatedCalories = calories,
+                    estimatedProteinGrams = protein,
+                    estimatedFatGrams = fat,
+                    confidence = "Heuristic",
+                    notes = notes
+                )
+            )
+        }
+    }
+
+    fun deleteFoodPhotoEstimate(estimate: FoodPhotoEstimate) {
+        viewModelScope.launch { repository.deleteFoodPhotoEstimate(estimate) }
+    }
+
+    fun addWearableSnapshot(source: String, steps: Int, heartRate: Int, sleepHours: Double, activeCalories: Double, notes: String) {
+        viewModelScope.launch {
+            repository.insertWearableSnapshot(
+                WearableSnapshot(
+                    source = source,
+                    steps = steps,
+                    heartRate = heartRate,
+                    sleepHours = sleepHours,
+                    activeCalories = activeCalories,
+                    notes = notes
+                )
+            )
+        }
+    }
+
+    fun deleteWearableSnapshot(snapshot: WearableSnapshot) {
+        viewModelScope.launch { repository.deleteWearableSnapshot(snapshot) }
+    }
+
     fun clearCurrentAlerts() {
         _activeAlert.value = null
         _isEmergency.value = false
+    }
+
+    fun removeAllData() {
+        viewModelScope.launch {
+            reminders.value.forEach { reminder ->
+                LocalNotificationManager.cancelReminder(getApplication(), reminder)
+            }
+            repository.clearAllUserData()
+            _predictionResult.value = null
+            _activeAlert.value = null
+            _isEmergency.value = false
+        }
     }
 
     private fun evaluateSafetyThresholds(glucoseValue: Double, unit: String) {
@@ -455,7 +626,8 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                 val insulinLogsList = insulinLogs.value
                 val currentUnit = _glucoseUnit.value
 
-                val result = GeminiPredictionService.getPredictions(
+                val result = MediaPipePredictionService.getPredictions(
+                    context = getApplication(),
                     profile = profile,
                     thresholds = thresholds,
                     readings = readings,
